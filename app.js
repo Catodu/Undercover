@@ -17,6 +17,12 @@ const state = {
   usedPairs: new Set(JSON.parse(localStorage.getItem("uc_used") || "[]")),
 };
 
+// Bouton pour quitter la partie à tout moment
+const quitBtn = $("#btn-quit");
+quitBtn.onclick = () => {
+  if (confirm("Quitter la partie en cours et revenir à l'accueil ?")) showHome();
+};
+
 function hostSay(key, vars) {
   hostText.textContent = HOST.say(key, vars);
   hostBubble.classList.remove("pop");
@@ -83,6 +89,7 @@ function normalize(s) {
 // ---------- Écrans ----------
 
 function showHome() {
+  quitBtn.hidden = true;
   hostSay("welcome");
   screen.innerHTML = `
     <h1 class="title">UNDERCOVER</h1>
@@ -134,6 +141,15 @@ function showSetup() {
         <button class="btn-round" id="plus">+</button>
       </div>
     </div>
+    <div class="field">
+      <label>Nombre d'Undercover</label>
+      <div class="counter">
+        <button class="btn-round" id="uc-minus">−</button>
+        <span id="uc-count">1</span>
+        <button class="btn-round" id="uc-plus">+</button>
+      </div>
+      <p class="hint" id="uc-hint"></p>
+    </div>
     <div class="field" id="mrwhite-field">
       <label class="chip chip-wide"><input type="checkbox" id="mrwhite"> <span>👻 Ajouter Mr White (5-6 joueurs)</span></label>
     </div>
@@ -151,16 +167,27 @@ function showSetup() {
     <button class="btn btn-ghost" id="btn-back">Retour</button>`;
 
   let count = 4;
+  let ucCount = 1;
   const mrwhiteInput = $("#mrwhite");
+  // les civils doivent rester majoritaires face aux imposteurs (undercover + Mr White)
+  const maxUC = () => Math.max(1, Math.ceil(count / 2) - 1 - (mrwhiteInput.checked ? 1 : 0));
   const refresh = () => {
     $("#count").textContent = count;
     const allowMW = count >= 5;
     mrwhiteInput.disabled = !allowMW;
     if (!allowMW) mrwhiteInput.checked = false;
     $("#mrwhite-field").style.opacity = allowMW ? 1 : 0.4;
+    ucCount = Math.min(ucCount, maxUC());
+    $("#uc-count").textContent = ucCount;
+    $("#uc-hint").textContent = maxUC() === 1
+      ? "1 seul Undercover possible avec cette configuration."
+      : `De 1 à ${maxUC()} Undercover (les civils restent majoritaires).`;
   };
   $("#minus").onclick = () => { count = Math.max(3, count - 1); refresh(); };
   $("#plus").onclick = () => { count = Math.min(6, count + 1); refresh(); };
+  $("#uc-minus").onclick = () => { ucCount = Math.max(1, ucCount - 1); refresh(); };
+  $("#uc-plus").onclick = () => { ucCount = Math.min(maxUC(), ucCount + 1); refresh(); };
+  mrwhiteInput.onchange = refresh;
   refresh();
 
   const setAllThemes = (checked) =>
@@ -174,7 +201,7 @@ function showSetup() {
     if (themes.length === 0) { alert("Choisis au moins un thème !"); return; }
     state.themes = themes;
     state.useMrWhite = mrwhiteInput.checked;
-    state.undercoverCount = 1;
+    state.undercoverCount = ucCount;
     showNames(count);
   };
 }
@@ -233,7 +260,7 @@ function startGame(names) {
   state.round = 0;
   state.revealIndex = 0;
 
-  const roles = ["undercover"];
+  const roles = Array(state.undercoverCount).fill("undercover");
   if (state.useMrWhite) roles.push("mrwhite");
   while (roles.length < names.length) roles.push("civil");
   const shuffledRoles = shuffle(roles);
@@ -247,6 +274,7 @@ function startGame(names) {
       alive: true,
     };
   });
+  quitBtn.hidden = false;
   showReveal();
 }
 
@@ -405,7 +433,7 @@ function showEnd(winner) {
 
   const banners = {
     civils: "😇 Les Civils gagnent !",
-    undercover: "🕵️ L'Undercover gagne !",
+    undercover: state.undercoverCount > 1 ? "🕵️ Les Undercover gagnent !" : "🕵️ L'Undercover gagne !",
     mrwhite: "👻 Mr White gagne !",
   };
   const roleLabel = { civil: "😇 Civil", undercover: "🕵️ Undercover", mrwhite: "👻 Mr White" };
