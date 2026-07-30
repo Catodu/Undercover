@@ -169,8 +169,9 @@ function showSetup() {
   let count = 4;
   let ucCount = 1;
   const mrwhiteInput = $("#mrwhite");
-  // les civils doivent rester majoritaires face aux imposteurs (undercover + Mr White)
-  const maxUC = () => Math.max(1, Math.ceil(count / 2) - 1 - (mrwhiteInput.checked ? 1 : 0));
+  // les civils (porteurs du même mot) doivent rester plus nombreux que les Undercover ;
+  // Mr White joue son propre jeu et ne compte pas dans la force des Undercover
+  const maxUC = () => Math.max(1, Math.ceil((count - (mrwhiteInput.checked ? 1 : 0)) / 2) - 1);
   const refresh = () => {
     $("#count").textContent = count;
     const allowMW = count >= 5;
@@ -412,15 +413,17 @@ function showMrWhiteGuess(p, fromElimination) {
 
 function checkEnd() {
   const alive = state.players.filter((p) => p.alive);
-  const badAlive = alive.filter((p) => p.role !== "civil");
+  const ucAlive = alive.filter((p) => p.role === "undercover");
+  const mwAlive = alive.filter((p) => p.role === "mrwhite");
   const civilsAlive = alive.filter((p) => p.role === "civil");
 
-  if (badAlive.length === 0) { showEnd("civils"); return; }
-  if (civilsAlive.length <= badAlive.length) {
-    const uc = badAlive.find((p) => p.role === "undercover");
-    if (uc) { showEnd("undercover"); return; }
-    // Seul Mr White face aux civils à égalité : dernière chance de deviner
-    showMrWhiteGuess(badAlive[0], false);
+  if (ucAlive.length === 0 && mwAlive.length === 0) { showEnd("civils"); return; }
+  // Les Undercover gagnent quand ils égalent tous les autres survivants
+  // (Mr White joue son propre jeu mais compte comme un survivant face à eux)
+  if (ucAlive.length > 0 && civilsAlive.length + mwAlive.length <= ucAlive.length) { showEnd("undercover"); return; }
+  // Seul Mr White face aux civils à égalité : dernière chance de deviner
+  if (ucAlive.length === 0 && civilsAlive.length <= mwAlive.length) {
+    showMrWhiteGuess(mwAlive[0], false);
     return;
   }
   showDiscussion();
