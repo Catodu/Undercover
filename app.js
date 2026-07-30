@@ -33,6 +33,47 @@ function shuffle(arr) {
   return a;
 }
 
+// ---------- Scores (persistants entre les parties) ----------
+
+const POINTS = { civil: 2, undercover: 5, mrwhite: 4 };
+
+function loadScores() {
+  return JSON.parse(localStorage.getItem("uc_scores") || "{}");
+}
+
+function saveScores(scores) {
+  localStorage.setItem("uc_scores", JSON.stringify(scores));
+}
+
+function awardPoints(winner) {
+  const scores = loadScores();
+  const gains = {};
+  for (const p of state.players) {
+    let pts = 0;
+    if (winner === "civils" && p.role === "civil") pts = POINTS.civil;
+    else if (winner === "undercover" && p.role === "undercover") pts = POINTS.undercover;
+    else if (winner === "mrwhite" && p.role === "mrwhite") pts = POINTS.mrwhite;
+    gains[p.name] = pts;
+    scores[p.name] = (scores[p.name] || 0) + pts;
+  }
+  saveScores(scores);
+  return gains;
+}
+
+function scoreboardHTML(highlight = []) {
+  const scores = loadScores();
+  const rows = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+  if (rows.length === 0) return `<p class="hint">Aucun score pour l'instant. Jouez une partie !</p>`;
+  const medals = ["🥇", "🥈", "🥉"];
+  return `<div class="recap">
+    ${rows.map(([name, pts], i) => `
+      <div class="recap-row ${highlight.includes(name) ? "glow" : ""}">
+        <span>${medals[i] || "🏅"} ${name}</span>
+        <span class="recap-word">${pts} pt${pts > 1 ? "s" : ""}</span>
+      </div>`).join("")}
+  </div>`;
+}
+
 function normalize(s) {
   return s.trim().toLowerCase().replaceAll("&", "et")
     .normalize("NFD").replace(/[̀-ͯ]/g, "")
@@ -47,6 +88,7 @@ function showHome() {
     <h1 class="title">UNDERCOVER</h1>
     <p class="subtitle">Le jeu de l'imposteur — animé par Sunny ${HOST.emoji}</p>
     <button class="btn btn-primary" id="btn-start">Nouvelle partie</button>
+    <button class="btn btn-ghost" id="btn-scores">🏆 Scores</button>
     <details class="rules">
       <summary>📖 Règles rapides</summary>
       <ul>
@@ -57,12 +99,29 @@ function showHome() {
       </ul>
     </details>`;
   $("#btn-start").onclick = showSetup;
+  $("#btn-scores").onclick = showScores;
+}
+
+function showScores() {
+  hostSay("scores");
+  screen.innerHTML = `
+    <h2>🏆 Classement général</h2>
+    ${scoreboardHTML()}
+    <button class="btn btn-primary" id="btn-back">Retour</button>
+    <button class="btn btn-ghost" id="btn-reset">Remettre les scores à zéro</button>`;
+  $("#btn-back").onclick = showHome;
+  $("#btn-reset").onclick = () => {
+    if (confirm("Effacer tous les scores ?")) {
+      localStorage.removeItem("uc_scores");
+      showScores();
+    }
+  };
 }
 
 function showSetup() {
   hostSay("setup");
   const themeBoxes = THEMES.map(
-    (t) => `<label class="chip"><input type="checkbox" value="${t.id}" ${t.id === "duos" ? "checked" : ""}>
+    (t) => `<label class="chip"><input type="checkbox" value="${t.id}" checked>
       <span>${t.emoji} ${t.name}</span></label>`
   ).join("");
   screen.innerHTML = `
@@ -123,7 +182,15 @@ function showNames(count) {
     const names = [...document.querySelectorAll(".names input")].map(
       (inp, i) => inp.value.trim() || `Joueur ${i + 1}`
     );
-    startGame(names);
+    // noms uniques (sinon votes et scores se mélangent)
+    const seen = new Set();
+    const unique = names.map((n) => {
+      let name = n, k = 2;
+      while (seen.has(name)) name = `${n} ${k++}`;
+      seen.add(name);
+      return name;
+    });
+    startGame(unique);
   };
 }
 
@@ -331,6 +398,8 @@ function showEnd(winner) {
     mrwhite: "👻 Mr White gagne !",
   };
   const roleLabel = { civil: "😇 Civil", undercover: "🕵️ Undercover", mrwhite: "👻 Mr White" };
+  const gains = awardPoints(winner);
+  const winners = state.players.filter((p) => gains[p.name] > 0).map((p) => p.name);
   screen.innerHTML = `
     <h1 class="title small">${banners[winner]}</h1>
     <div class="recap">
@@ -339,8 +408,11 @@ function showEnd(winner) {
           <span>${p.name}</span>
           <span>${roleLabel[p.role]}</span>
           <span class="recap-word">${p.word ?? "—"}</span>
+          <span class="gain">${gains[p.name] > 0 ? `+${gains[p.name]} pts` : ""}</span>
         </div>`).join("")}
     </div>
+    <h2>🏆 Classement</h2>
+    ${scoreboardHTML(winners)}
     <button class="btn btn-primary" id="btn-replay">Rejouer (mêmes joueurs)</button>
     <button class="btn btn-ghost" id="btn-home">Accueil</button>`;
   $("#btn-replay").onclick = () => {

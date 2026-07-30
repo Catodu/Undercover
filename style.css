@@ -181,7 +181,7 @@ h2 { text-align: center; font-size: 1.3rem; }
 .recap { display: flex; flex-direction: column; gap: 8px; }
 .recap-row {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr auto auto auto;
   gap: 10px;
   align-items: center;
   background: var(--card);
@@ -190,4 +190,6 @@ h2 { text-align: center; font-size: 1.3rem; }
   font-size: 0.95rem;
 }
 .recap-row.dead { opacity: 0.55; text-decoration: line-through; }
+.recap-row.glow { border: 1px solid var(--accent2); box-shadow: 0 0 12px rgba(255, 203, 94, 0.25); }
 .recap-word { color: var(--accent2); font-weight: 700; }
+.gain { color: #7dff9b; font-weight: 800; font-size: 0.9rem; }

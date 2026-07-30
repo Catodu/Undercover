@@ -2,7 +2,17 @@
 
 Le jeu de société **Undercover** (le jeu de l'imposteur) en version web, jouable de **3 à 6 joueurs** sur un seul téléphone (passe-le-téléphone), avec **Sunny**, une IA animatrice sympa qui commente la partie.
 
-Inspiré des shorts façon *Sunroof* : les mots sont regroupés par **thématiques** (Duos de légende, Rap FR, Anime & Manga, Foot, Bouffe, Jeux vidéo, Ciné, Classique…) — avec par exemple la paire *PNL* / *Bee & A* 🍥.
+Inspiré des shorts façon *Sunroof* : les mots sont regroupés par **thématiques** (Duos de légende, Persos de manga, Persos de film & série, Stars & Internet, Rap FR, Anime & Manga, Foot, Bouffe, Jeux vidéo, Ciné, Classique…) — avec par exemple la paire *PNL* / *Bee & A* 🍥.
+
+## Système de points 🏆
+
+Les scores sont **conservés d'une partie à l'autre** (par prénom, sur l'appareil) :
+
+- 😇 Victoire des Civils : **+2 pts** par civil
+- 🕵️ Victoire de l'Undercover : **+5 pts**
+- 👻 Victoire de Mr White : **+4 pts**
+
+Le classement s'affiche en fin de partie et via le bouton **🏆 Scores** de l'accueil (avec remise à zéro possible).
 
 ## Comment jouer
 

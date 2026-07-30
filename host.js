@@ -72,6 +72,11 @@ const HOST = {
       "Victoire de l'UNDERCOVER ! Vous vous êtes fait balader du début à la fin. 😈",
       "L'Undercover gagne ! Chapeau l'artiste, quel talent de comédien.",
     ],
+    scores: [
+      "Le tableau des scores ! Là où les egos viennent se faire du mal.",
+      "Voici le classement. Pas de triche, j'ai tout noté moi-même.",
+      "Les vrais champions sont là. Les autres… courage !",
+    ],
     playAgain: [
       "On remet ça ? J'ai encore plein de mots en stock !",
       "Une revanche ? Les perdants ont des comptes à régler on dirait…",
