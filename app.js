@@ -138,7 +138,13 @@ function showSetup() {
       <label class="chip chip-wide"><input type="checkbox" id="mrwhite"> <span>👻 Ajouter Mr White (5-6 joueurs)</span></label>
     </div>
     <div class="field">
-      <label>Thèmes</label>
+      <div class="themes-header">
+        <label>Thèmes</label>
+        <div class="theme-actions">
+          <button class="btn-mini" id="btn-all">Tout cocher</button>
+          <button class="btn-mini" id="btn-none">Tout décocher</button>
+        </div>
+      </div>
       <div class="chips">${themeBoxes}</div>
     </div>
     <button class="btn btn-primary" id="btn-next">Suivant</button>
@@ -156,6 +162,11 @@ function showSetup() {
   $("#minus").onclick = () => { count = Math.max(3, count - 1); refresh(); };
   $("#plus").onclick = () => { count = Math.min(6, count + 1); refresh(); };
   refresh();
+
+  const setAllThemes = (checked) =>
+    document.querySelectorAll(".chips input").forEach((c) => (c.checked = checked));
+  $("#btn-all").onclick = () => setAllThemes(true);
+  $("#btn-none").onclick = () => setAllThemes(false);
 
   $("#btn-back").onclick = showHome;
   $("#btn-next").onclick = () => {
